@@ -22,3 +22,10 @@ test('RAG nói không biết khi không có tài liệu đủ khớp', async () 
   assert.equal(result.confidence, 0)
   assert.match(result.answer, /chưa biết/)
 })
+
+test('kho HCMUS có metadata và trả chunk có nội dung', async () => {
+  const results = await searchKnowledge('thư viện HCMUS ở đâu')
+  assert.ok(results.length > 0)
+  assert.ok(results.every(item => item.universityId === 'hcmus'))
+  assert.ok(results.some(item => /Nguyễn Văn Cừ|Khu đô thị/.test(item.content)))
+})

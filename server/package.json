@@ -9,6 +9,7 @@
     "seed": "node src/db/seed.js && node src/db/seedDemo.js",
     "db:migrate": "node src/db/migrate.js",
     "db:setup": "npm run db:migrate && npm run seed",
+    "knowledge:embed": "node src/scripts/embedKnowledge.js",
     "vapid": "node src/scripts/generateVapid.js",
     "test": "DATABASE_URL= node --test"
   },

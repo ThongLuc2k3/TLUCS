@@ -9,6 +9,10 @@
     {"intent":"community","terms":["diễn đàn","server trường","bài viết","bình luận","tin nhắn","kết bạn","lời mời trò chuyện"]},
     {"intent":"account","terms":["tài khoản","đăng nhập google","xác minh","hồ sơ","trường đại học","quyền riêng tư"]},
     {"intent":"safety","terms":["làm hộ","thi hộ","mua bán đáp án","lừa đảo","đa cấp","báo cáo","khiếu nại","kiểm duyệt"]},
-    {"intent":"agent","terms":["agent","trợ lý","chatbot","tool","công cụ","làm giúp"]}
+    {"intent":"agent","terms":["agent","trợ lý","chatbot","tool","công cụ","làm giúp"]},
+    {"intent":"hcmus_general","terms":["hcmus","khtn","khoa học tự nhiên","đhqg-hcm","đại học quốc gia","227 nguyễn văn cừ","đông hòa","cơ sở trường","liên hệ trường"]},
+    {"intent":"hcmus_admission","terms":["tuyển sinh","xét tuyển","nguyện vọng","chỉ tiêu","mã ngành","ngành đào tạo","phân ngành","học phí 2026","tân sinh viên","nhập học"]},
+    {"intent":"hcmus_academic","terms":["đăng ký học phần","đkhp","portal sinh viên","học vụ","tiên quyết","học trước","học hè","hủy học phần","hoãn thi","phúc tra","bảo lưu"]},
+    {"intent":"hcmus_student_life","terms":["ký túc xá","ktx","thư viện","học bổng","điểm rèn luyện","tham vấn tâm lý","công tác sinh viên","bảo hiểm y tế","sổ đoàn","đồng phục thể dục"]}
   ]
 }

@@ -55,6 +55,10 @@ try {
   await client.query(`alter table post_gifts drop constraint if exists post_gifts_target_check`)
   await client.query(`alter table post_gifts add constraint post_gifts_target_check check(num_nonnulls(post_id,comment_id)=1)`)
   await client.query(`create index if not exists post_gifts_comment_id_idx on post_gifts(comment_id)`)
+  await client.query(`create extension if not exists vector`)
+  await client.query(`create table if not exists knowledge_chunks(id text primary key,source text not null,title text not null,content text not null,metadata jsonb not null default '{}',content_hash text not null,embedding vector(768) not null,embedding_model text not null,embedded_at timestamptz not null default now())`)
+  await client.query(`create index if not exists knowledge_chunks_source_idx on knowledge_chunks(source)`)
+  await client.query(`create index if not exists knowledge_chunks_embedding_hnsw_idx on knowledge_chunks using hnsw (embedding vector_cosine_ops)`)
 } catch (error) {
   await client.query('rollback')
   throw error
