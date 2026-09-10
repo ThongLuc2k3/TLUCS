@@ -29,3 +29,10 @@ test('kho HCMUS có metadata và trả chunk có nội dung', async () => {
   assert.ok(results.every(item => item.universityId === 'hcmus'))
   assert.ok(results.some(item => /Nguyễn Văn Cừ|Khu đô thị/.test(item.content)))
 })
+
+test('câu trả lời RAG giữ nội dung sau heading thay vì chỉ còn nguồn', async () => {
+  const result = await answerFromKnowledge('học phí 2026-2027 nhóm Toán Dữ liệu và Máy tính là bao nhiêu')
+  assert.equal(result.matched, true)
+  assert.match(result.answer, /40,5 triệu đồng\/năm/)
+  assert.match(result.answer, /Nguồn:/)
+})

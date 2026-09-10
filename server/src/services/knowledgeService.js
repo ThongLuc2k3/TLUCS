@@ -117,7 +117,7 @@ export async function getKnowledgeStats() {
 
 export async function answerFromKnowledge(query) {
   const [chunk] = await searchKnowledge(query, 1)
-  if (!chunk) return { answer: 'Mình chưa biết câu trả lời từ kho tài liệu TLUCS hiện có.', confidence: 0, source: null }
-  const paragraphs = chunk.content.split(/\n\s*\n/).slice(1).filter(part => !part.startsWith('## Nguồn'))
-  return { answer: `${paragraphs.join('\n\n').trim().slice(0, 1000)}\n\nNguồn: [${chunk.source} > ${chunk.title}]`, confidence: chunk.confidence, source: chunk.source }
+  if (!chunk) return { answer: 'Mình chưa biết câu trả lời từ kho tài liệu TLUCS hiện có.', confidence: 0, source: null, matched: false }
+  const answer = chunk.content.split('\n').slice(1).join('\n').replace(/\n## Nguồn[\s\S]*$/i, '').trim().slice(0, 1000)
+  return { answer: `${answer}\n\nNguồn: [${chunk.source} > ${chunk.title}]`, confidence: chunk.confidence, source: chunk.source, matched: true, retrievalMode: chunk.retrievalMode }
 }

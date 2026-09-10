@@ -32,7 +32,7 @@ router.post('/chat', aiLimiter, async (req, res, next) => {
     const needsAgent = intent ? ['agent_read', 'agent_write', 'confirm', 'clarify'].includes(intent.route) : shouldUseAgent(message)
     if (needsAgent) return res.json({ data: { answer: 'Đây là yêu cầu cần Agent truy cập dữ liệu hoặc hiểu thêm ngữ cảnh. Bạn hãy đăng nhập TLUCS rồi gửi lại; mọi thao tác thay đổi vẫn phải được xác nhận.', mode: 'auth_required', intent } })
     const knowledge = await answerFromKnowledge(message)
-    res.json({ data: { answer: knowledge.answer, mode: 'rag', confidence: knowledge.confidence, source: knowledge.source, intent } })
+    res.json({ data: { answer: knowledge.answer, mode: 'rag', confidence: knowledge.confidence, source: knowledge.source, matched: knowledge.matched, retrievalMode: knowledge.retrievalMode, intent } })
   } catch (error) { next(error) }
 })
 
@@ -44,7 +44,7 @@ router.post('/agent', aiLimiter, requireAuth, async (req, res, next) => {
     const needsAgent = intent ? ['agent_read', 'agent_write', 'confirm', 'clarify'].includes(intent.route) : shouldUseAgent(message)
     if (!needsAgent) {
       const knowledge = await answerFromKnowledge(message)
-      return res.json({ data: { reply: knowledge.answer, action: null, toolsUsed: knowledge.confidence >= .85 ? ['search_tlucs_knowledge'] : [], steps: 1, mode: 'rag', confidence: knowledge.confidence, intent } })
+      return res.json({ data: { reply: knowledge.answer, action: null, toolsUsed: knowledge.matched ? ['search_tlucs_knowledge'] : [], steps: 1, mode: 'rag', confidence: knowledge.confidence, matched: knowledge.matched, retrievalMode: knowledge.retrievalMode, intent } })
     }
     const user = await getUser(req.auth.sub)
     const context = { userId: req.auth.sub, universityId: user.default_university_id, user: { displayName: user.display_name, areaLabel: user.area_label, defaultUniversityId: user.default_university_id, memberships: user.memberships || [] }, now: new Date().toISOString(), timezone: 'Asia/Ho_Chi_Minh' }
