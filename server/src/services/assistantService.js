@@ -1,14 +1,13 @@
 import { env } from '../config/env.js'
 import { ASSISTANT_TOOL_SCHEMAS, MUTATING_ASSISTANT_TOOLS, READ_ASSISTANT_TOOLS, executeAssistantTool } from './assistantTools.js'
 
-const systemInstruction = `Bạn là Agent TLUCS (Trusted Local University Community Space), cộng đồng sinh viên khởi đầu tại HCMUS.
-Bạn trò chuyện tự nhiên bằng tiếng Việt và dùng tool để đọc hoặc thao tác dữ liệu thật thay cho người dùng.
+const systemInstruction = `Bạn là Agent TLUCS — trợ lý AI của Trusted Local University Community Space (TLUCS), nền tảng cộng đồng sinh viên khởi đầu tại HCMUS. Nhiệm vụ của bạn là trò chuyện tự nhiên bằng tiếng Việt, giúp người dùng tra cứu thông tin đáng tin cậy và thực hiện thao tác thật trên nền tảng thay họ khi cần, luôn ưu tiên chính xác, an toàn và đúng phạm vi quyền hạn của người dùng.
 
-Nguyên tắc bắt buộc:
+Quy định bắt buộc:
 - Một tài khoản có thể vừa đăng yêu cầu vừa nhận hỗ trợ. Yêu cầu gồm miễn phí, trả phí và trao đổi.
 - Ví, QR, liên kết ngân hàng và thanh toán đều là mô phỏng, không phát sinh tiền thật. Phí nền tảng dự kiến là 1% phần được giải ngân thành công.
 - Cấm làm hộ, thi hộ, mua bán đề hoặc đáp án, lừa đảo, đa cấp và chia sẻ dữ liệu trái phép.
-- Dùng tool đọc để tra dữ liệu thật; không tự bịa ID, kết quả, trạng thái, số dư, lịch sử hoặc chính sách.
+- Dùng tool đọc để tra dữ liệu thật; không tự bịa ID, kết quả, trạng thái, số dư, lịch sử hoặc chính sách. Trước khi trả lời, kiểm tra kết quả có thực sự đúng với điều người dùng cần không; nếu chưa đúng, tự suy nghĩ lại đúng ý họ đang cần rồi thử tool hoặc truy vấn khác. Sau tối đa 3 lần thử mà vẫn không ra kết quả đúng yêu cầu hoặc không có dữ liệu, báo thẳng là chưa tìm được, không đoán và không trả lời lạc đề.
 - Khi thiếu dữ kiện bắt buộc, hỏi đúng dữ kiện còn thiếu. Hiểu lỗi chính tả, 10k = 10000 VND và thời gian đời thường theo Asia/Ho_Chi_Minh.
 - Cụm "trao đổi ngắn" mặc định durationMinutes là 30. "Tầm 8h tối" đã là thời gian đủ rõ và phải hiểu là 20:00, không hỏi lại giờ.
 - Khi người dùng muốn thay đổi dữ liệu, hãy gọi đúng tool thay đổi. Máy chủ sẽ yêu cầu họ xác nhận trước khi chạy tool đó.
@@ -49,7 +48,7 @@ function lowerCaseSchema(value) {
 const toGroqTool = tool => ({ type: 'function', function: { name: tool.name, description: tool.description, parameters: lowerCaseSchema(tool.parameters) } })
 const toolGroups = [
   { pattern: /yêu cầu|hỗ trợ|ứng viên|gia sư|môn học/i, names: ['search_tlucs','search_requests','list_my_requests','list_my_sessions','create_request','accept_request','select_request_application','pay_request_remaining','release_request_payment','check_in_session','complete_session','review_session','report_no_show','open_request_dispute'] },
-  { pattern: /chia sẻ|tài liệu|mở khóa|buổi trao đổi/i, names: ['search_tlucs','search_sharing_posts','list_my_conversations','create_sharing_post','join_sharing_post','confirm_sharing_access','cancel_sharing_participation','cancel_sharing_post','open_sharing_dispute','review_sharing'] },
+  { pattern: /chia sẻ|tài liệu|mở khóa|buổi trao đổi|template|cv|checklist|slide|bộ đề|lộ trình/i, names: ['search_tlucs','search_sharing_posts','list_my_conversations','create_sharing_post','join_sharing_post','confirm_sharing_access','cancel_sharing_participation','cancel_sharing_post','open_sharing_dispute','review_sharing'] },
   { pattern: /ví|tiền|số dư|nạp|rút|thanh toán|giải ngân|tặng/i, names: ['get_my_wallet','wallet_topup','wallet_withdraw','pay_request_remaining','release_request_payment','gift_forum_post','gift_forum_comment'] },
   { pattern: /diễn đàn|bài viết|bình luận|cảm xúc|theo dõi|lưu bài/i, names: ['list_forum_posts','list_forum_comments','create_forum_post','add_forum_comment','react_forum_post','react_forum_comment','save_forum_post','follow_forum_post','gift_forum_post','gift_forum_comment'] },
   { pattern: /tin nhắn|trò chuyện|chat|kênh|server|cộng đồng|thành viên|người dùng/i, names: ['search_people','list_my_conversations','list_my_chat_requests','list_community_servers','list_conversation_messages','list_channel_messages','send_conversation_message','send_channel_message','request_direct_chat','respond_chat_request','block_user','propose_community_channel'] },
@@ -58,7 +57,8 @@ const toolGroups = [
 ]
 
 function groqToolsFor(text) {
-  const names = new Set(['search_tlucs', 'search_tlucs_knowledge', 'get_my_profile'])
+  const marketplaceLookup=/(template|cv|checklist|slide|tài liệu|bài chia sẻ|bộ đề|lộ trình)/i.test(text)&&/(cần|tìm|kiếm|có|muốn|mở khóa|xem|gợi ý)/i.test(text)
+  const names = new Set(['search_tlucs', ...(marketplaceLookup?[]:['search_tlucs_knowledge']), 'get_my_profile'])
   for (const group of toolGroups) if (group.pattern.test(text)) group.names.forEach(name => names.add(name))
   if (names.size === 3) ['search_requests','search_sharing_posts','search_people','get_my_wallet','list_my_notifications','list_my_conversations','create_report'].forEach(name => names.add(name))
   return ASSISTANT_TOOL_SCHEMAS.filter(tool => names.has(tool.name)).map(toGroqTool)

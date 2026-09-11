@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { shouldUseAgent } from '../src/routes/assistant.routes.js'
+import { isMarketplaceLookup,shouldUseAgent } from '../src/routes/assistant.routes.js'
 import { normalizeAgentAction, normalizeIntentResult } from '../src/services/assistantService.js'
 
 test('dữ liệu cá nhân và thao tác được chuyển tới Agent', () => {
@@ -8,7 +8,14 @@ test('dữ liệu cá nhân và thao tác được chuyển tới Agent', () => 
   assert.equal(shouldUseAgent('số dư của tôi hiện tại là bao nhiêu?'), true)
   assert.equal(shouldUseAgent('Ví tôi còn bao nhiêu?'), true)
   assert.equal(shouldUseAgent('tìm giúp mình bài chia sẻ giải tích'), true)
+  assert.equal(shouldUseAgent('tôi cần template CV cho ngành Data'), true)
   assert.equal(shouldUseAgent('xác nhat'), true)
+})
+
+test('nhu cầu marketplace không bị chuyển nhầm sang RAG',()=>{
+  assert.equal(isMarketplaceLookup('tôi cần template CV cho ngành Data'),true)
+  assert.equal(isMarketplaceLookup('có bộ checklist hồ sơ học bổng không'),true)
+  assert.equal(isMarketplaceLookup('quy định chia sẻ dữ liệu là gì'),false)
 })
 
 test('câu hỏi kiến thức tĩnh ở lại RAG', () => {

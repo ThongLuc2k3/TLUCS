@@ -20,15 +20,17 @@ export function shouldUseAgent(message) {
   const staticQuestion = /^(cach|lam sao|huong dan|tai sao|vi sao|la gi|quy dinh|chinh sach) /.test(text)
   const personalData = /(cua toi|cua minh|vi toi|vi minh|so du|bao nhieu tien|lich su|thong bao cua|ho so cua|yeu cau cua|bai cua|phien cua|tin nhan cua)/.test(text)
   const operation = /(dang|tao|nhan|chon|tham gia|mo khoa|xac nhan|xac nhat|huy|cap nhat|doi|nap|rut|thanh toan|giai ngan|check in|hoan tat|danh gia|bao cao|khieu nai|tranh chap|binh luan|tha|luu|theo doi|tang|gui|nhan tin|moi|chap nhan|tu choi|de xuat|xac minh|tim|tra cuu|xem|liet ke)/.test(text)
-  const requestCue = /^(dang|tao|nhan|chon|tham gia|mo khoa|xac nhan|xac nhat|huy|cap nhat|doi|nap|rut|thanh toan|giai ngan|check in|hoan tat|danh gia|bao cao|khieu nai|tranh chap|binh luan|tha|luu|theo doi|tang|gui|nhan tin|moi|chap nhan|tu choi|de xuat|xac minh|tim|tra cuu|xem|liet ke)( |$)|(toi muon|minh muon|co the|hay |giup toi|giup minh|dum|ho toi|cho toi|duoc khong|duoc k)/.test(text)
-  return personalData || (!staticQuestion && operation && requestCue)
+  const requestCue = /^(dang|tao|nhan|chon|tham gia|mo khoa|xac nhan|xac nhat|huy|cap nhat|doi|nap|rut|thanh toan|giai ngan|check in|hoan tat|danh gia|bao cao|khieu nai|tranh chap|binh luan|tha|luu|theo doi|tang|gui|nhan tin|moi|chap nhan|tu choi|de xuat|xac minh|tim|tra cuu|xem|liet ke)( |$)|(toi can|minh can|toi muon|minh muon|co the|hay |giup toi|giup minh|dum|ho toi|cho toi|duoc khong|duoc k)/.test(text)
+  return personalData || isMarketplaceLookup(message) || (!staticQuestion && operation && requestCue)
 }
+
+export function isMarketplaceLookup(message){const text=normalizeIntent(message),entity=/(template|cv|checklist|slide|tai lieu|bai chia se|bo de|lo trinh|buoi chia se|noi dung chia se|yeu cau ho tro)/.test(text),lookup=/(toi can|minh can|can tim|muon tim|tim|kiem|co .* khong|mo khoa|xem|goi y)/.test(text);return entity&&lookup}
 
 router.post('/chat', aiLimiter, async (req, res, next) => {
   try {
     const message = String(req.body.message || '')
     if (greetingPattern.test(message)) return res.json({ data: { answer: greeting, mode: 'script' } })
-    const intent = await classifyAssistantIntent(message, req.body.history)
+    const intent = isMarketplaceLookup(message)?{route:'agent_read',confidence:1,reason:'Tìm dữ liệu marketplace',provider:'rule:marketplace'}:await classifyAssistantIntent(message, req.body.history)
     const needsAgent = intent ? ['agent_read', 'agent_write', 'confirm', 'clarify'].includes(intent.route) : shouldUseAgent(message)
     if (needsAgent) return res.json({ data: { answer: 'Đây là yêu cầu cần Agent truy cập dữ liệu hoặc hiểu thêm ngữ cảnh. Bạn hãy đăng nhập TLUCS rồi gửi lại; mọi thao tác thay đổi vẫn phải được xác nhận.', mode: 'auth_required', intent } })
     const knowledge = await answerFromKnowledge(message,{universityId:req.body.universityId||null})
@@ -40,7 +42,7 @@ router.post('/agent', aiLimiter, requireAuth, async (req, res, next) => {
   try {
     const message = String(req.body.message || '')
     if (greetingPattern.test(message)) return res.json({ data: { reply: greeting, action: null, toolsUsed: [], steps: 0, mode: 'script' } })
-    const intent = await classifyAssistantIntent(message, req.body.history)
+    const intent = isMarketplaceLookup(message)?{route:'agent_read',confidence:1,reason:'Tìm dữ liệu marketplace',provider:'rule:marketplace'}:await classifyAssistantIntent(message, req.body.history)
     const needsAgent = intent ? ['agent_read', 'agent_write', 'confirm', 'clarify'].includes(intent.route) : shouldUseAgent(message)
     if (!needsAgent) {
       const user = await getUser(req.auth.sub)
