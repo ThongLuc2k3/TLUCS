@@ -3,6 +3,7 @@ import { database } from '../db/connection.js'
 import authRoutes from './auth.routes.js'
 import requestRoutes from './requests.routes.js'
 import walletRoutes from './wallet.routes.js'
+import knowledgeRoutes from './knowledge.routes.js'
 import conversationRoutes from './conversations.routes.js'
 import forumRoutes from './forum.routes.js'
 import sharingRoutes from './sharing.routes.js'
@@ -19,6 +20,7 @@ const router=Router()
 router.use('/auth',authRoutes)
 router.use('/requests',requestRoutes)
 router.use('/wallet',walletRoutes)
+router.use('/knowledge',knowledgeRoutes)
 router.use('/conversations',conversationRoutes)
 router.use('/forum',forumRoutes)
 router.use('/sharing',sharingRoutes)

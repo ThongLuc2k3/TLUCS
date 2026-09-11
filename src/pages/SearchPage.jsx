@@ -18,7 +18,7 @@ export default function SearchPage() {
   useEffect(() => {
     if (q.trim().length < 2) { setData(null); return }
     const query = new URLSearchParams({ q })
-    if (activeUniversityId) query.set('university', activeUniversityId)
+    if (activeUniversityId) query.set('universityId', activeUniversityId)
     const timer = setTimeout(() => api(`/search?${query}`, { token: session?.accessToken }).then(x => { setData(x.data); setError('') }).catch(e => setError(e.message)), 250)
     return () => clearTimeout(timer)
   }, [q, session, activeUniversityId])

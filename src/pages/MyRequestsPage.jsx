@@ -1,4 +1,5 @@
 import { useEffect,useState } from 'react'
+/* oxlint-disable react-hooks/exhaustive-deps */
 import { Clock3,UserCheck } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../context/AuthContext'

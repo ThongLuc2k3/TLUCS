@@ -213,6 +213,23 @@ CREATE TABLE transactions (
   CHECK(gross_vnd = deposit_vnd + remaining_vnd)
 );
 CREATE TABLE ledger_entries (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), transaction_id uuid REFERENCES transactions(id), user_id uuid REFERENCES users(id), direction text NOT NULL CHECK(direction IN ('credit','debit')), amount_vnd integer NOT NULL CHECK(amount_vnd > 0), entry_type text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE payout_accounts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  bank_code text NOT NULL, bank_name text NOT NULL, account_number_encrypted text NOT NULL,
+  account_number_hash text NOT NULL, account_last4 text NOT NULL, account_name text NOT NULL,
+  is_default boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(user_id,account_number_hash)
+);
+CREATE UNIQUE INDEX payout_accounts_one_default ON payout_accounts(user_id) WHERE is_default;
+CREATE TABLE wallet_cash_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES users(id), kind text NOT NULL CHECK(kind IN ('topup','withdrawal')),
+  amount_vnd integer NOT NULL CHECK(amount_vnd BETWEEN 10000 AND 10000000), code text NOT NULL UNIQUE,
+  status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','processing','approved','paid','rejected','cancelled')),
+  payout_account_id uuid REFERENCES payout_accounts(id), bank_reference text UNIQUE, actual_amount_vnd integer,
+  sender_name text, review_note text, reviewed_by uuid REFERENCES users(id), reviewed_at timestamptz,
+  ledger_entry_id uuid UNIQUE REFERENCES ledger_entries(id), created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX wallet_cash_requests_queue_idx ON wallet_cash_requests(status,kind,created_at);
 CREATE UNIQUE INDEX transactions_request_unique ON transactions(request_id) WHERE request_id IS NOT NULL;
 CREATE UNIQUE INDEX transactions_sharing_buyer_unique ON transactions(sharing_post_id,payer_id) WHERE sharing_post_id IS NOT NULL;
 CREATE TABLE reviews (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), request_id uuid NOT NULL REFERENCES requests(id), reviewer_id uuid NOT NULL REFERENCES users(id), reviewee_id uuid NOT NULL REFERENCES users(id), rating smallint NOT NULL CHECK(rating BETWEEN 1 AND 5), comment text, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(request_id,reviewer_id));

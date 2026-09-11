@@ -210,6 +210,34 @@ try{
   where w.user_id=base.user_id`)
   await client.query(`update comments c set gift_count=(select count(*) from post_gifts g where g.comment_id=c.id),gift_total_vnd=(select coalesce(sum(amount_vnd),0) from post_gifts g where g.comment_id=c.id) where c.id between '31000000-0000-4000-8000-000000000001' and '31000000-0000-4000-8000-000000000021'`)
 
+  // Thông báo phong phú cho tài khoản demo chính; UUID cố định giúp seed lặp lại không sinh bản trùng.
+  await client.query(`insert into notifications(id,user_id,kind,title,body,action_url,read_at,created_at) values
+  ('80000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','request_new','Yêu cầu mới phù hợp với bạn','Minh Anh đang cần chia sẻ kinh nghiệm học Thị giác máy tính.', '/yeu-cau',null,now()-interval '4 minutes'),
+  ('80000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','request_new','Có người cần hỗ trợ Cấu trúc dữ liệu','Quang Huy vừa đăng yêu cầu ôn cây đỏ đen trước cuối kỳ.', '/yeu-cau',null,now()-interval '18 minutes'),
+  ('80000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000001','request_application','Có ứng viên mới','Gia Huy muốn hỗ trợ yêu cầu luyện thuyết trình của bạn.', '/yeu-cau-cua-toi',null,now()-interval '32 minutes'),
+  ('80000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000001','request_application','Hồ sơ ứng viên gần khớp','Mai Chi đã gửi lời nhắn giới thiệu vào yêu cầu của bạn.', '/yeu-cau-cua-toi',null,now()-interval '47 minutes'),
+  ('80000000-0000-4000-8000-000000000005','10000000-0000-4000-8000-000000000001','request_match','Yêu cầu đã ghép thành công','Bạn đã được ghép với Hoàng Nam. Phòng trao đổi đã sẵn sàng.', '/phien',null,now()-interval '1 hour'),
+  ('80000000-0000-4000-8000-000000000006','10000000-0000-4000-8000-000000000001','request_reminder','Phiên hỗ trợ sắp bắt đầu','Phiên luyện thuyết trình sẽ bắt đầu sau 30 phút.', '/phien',null,now()-interval '90 minutes'),
+  ('80000000-0000-4000-8000-000000000007','10000000-0000-4000-8000-000000000001','request_message','Tin nhắn mới từ Hoàng Nam','Mình đã xem slide, tối nay mình bắt đầu từ phần mở bài nhé.', '/tin-nhan',now()-interval '1 hour',now()-interval '2 hours'),
+  ('80000000-0000-4000-8000-000000000008','10000000-0000-4000-8000-000000000001','request_payment','Tiền cọc đã được giữ','5.000đ đang được giữ an toàn cho phiên hỗ trợ.', '/vi',now()-interval '2 hours',now()-interval '3 hours'),
+  ('80000000-0000-4000-8000-000000000009','10000000-0000-4000-8000-000000000001','sharing_new','Tài liệu AI mới được chia sẻ','Minh Anh vừa đăng bộ ghi chú ôn Cơ sở AI.', '/chia-se',null,now()-interval '7 minutes'),
+  ('80000000-0000-4000-8000-000000000010','10000000-0000-4000-8000-000000000001','sharing_new','Bộ đề Cấu trúc dữ liệu mới','Ngọc Linh đã chia sẻ 10 đề luyện kèm lời giải chi tiết.', '/chia-se',null,now()-interval '25 minutes'),
+  ('80000000-0000-4000-8000-000000000011','10000000-0000-4000-8000-000000000001','sharing_new','Buổi review đồ án sắp diễn ra','Hoàng Nam mở đăng ký buổi review đồ án tốt nghiệp CNTT.', '/chia-se',null,now()-interval '55 minutes'),
+  ('80000000-0000-4000-8000-000000000012','10000000-0000-4000-8000-000000000001','sharing_access','Mở khóa tài liệu thành công','Bộ checklist phỏng vấn Backend đã có trong thư viện của bạn.', '/chia-se-cua-toi',null,now()-interval '70 minutes'),
+  ('80000000-0000-4000-8000-000000000013','10000000-0000-4000-8000-000000000001','sharing_reminder','Nhắc lịch chia sẻ','Buổi trao đổi về CV và lộ trình Data Intern diễn ra vào ngày mai.', '/chia-se-cua-toi',null,now()-interval '2 hours 20 minutes'),
+  ('80000000-0000-4000-8000-000000000014','10000000-0000-4000-8000-000000000001','sharing_material','Chủ bài vừa thêm tài liệu','Phương Thảo đã tải lên bản CV mẫu có chú thích.', '/chia-se-cua-toi',now()-interval '2 hours',now()-interval '3 hours'),
+  ('80000000-0000-4000-8000-000000000015','10000000-0000-4000-8000-000000000001','sharing_review','Hãy đánh giá nội dung','Bạn đã hoàn tất buổi chia sẻ. Đánh giá sẽ giúp cộng đồng chọn tài liệu tốt hơn.', '/chia-se-cua-toi',now()-interval '5 hours',now()-interval '8 hours'),
+  ('80000000-0000-4000-8000-000000000016','10000000-0000-4000-8000-000000000002','request_application','Có người muốn hỗ trợ bạn','Sinh viên Demo đã ứng tuyển vào yêu cầu Thị giác máy tính.', '/yeu-cau-cua-toi',null,now()-interval '12 minutes'),
+  ('80000000-0000-4000-8000-000000000017','10000000-0000-4000-8000-000000000003','request_application','Yêu cầu có ứng viên mới','Đức Thịnh có kinh nghiệm Cấu trúc dữ liệu và muốn hỗ trợ bạn.', '/yeu-cau-cua-toi',null,now()-interval '29 minutes'),
+  ('80000000-0000-4000-8000-000000000018','10000000-0000-4000-8000-000000000005','sharing_join','Có thành viên mới tham gia','Khánh Vy đã đăng ký buổi review lộ trình Data Intern.', '/chia-se-cua-toi',null,now()-interval '36 minutes'),
+  ('80000000-0000-4000-8000-000000000019','10000000-0000-4000-8000-000000000006','sharing_access','Tài liệu của bạn đã được mở khóa','Bảo Lâm vừa mở khóa bộ đề Cấu trúc dữ liệu.', '/chia-se-cua-toi',null,now()-interval '44 minutes'),
+  ('80000000-0000-4000-8000-000000000020','10000000-0000-4000-8000-000000000009','sharing_join','Buổi chia sẻ có người tham gia mới','Nhật Minh đã tham gia buổi review đồ án tốt nghiệp.', '/chia-se-cua-toi',null,now()-interval '1 hour 15 minutes'),
+  ('80000000-0000-4000-8000-000000000021','10000000-0000-4000-8000-000000000012','sharing_access','CV mẫu của bạn có lượt mở khóa mới','Mai Chi vừa mở khóa Template CV Data Intern.', '/chia-se-cua-toi',null,now()-interval '1 hour 40 minutes'),
+  ('80000000-0000-4000-8000-000000000022','10000000-0000-4000-8000-000000000014','sharing_access','Tài liệu học bổng được quan tâm','Thùy Dương đã mở khóa bộ checklist hồ sơ học bổng.', '/chia-se-cua-toi',null,now()-interval '2 hours 10 minutes'),
+  ('80000000-0000-4000-8000-000000000023','10000000-0000-4000-8000-000000000007','request_new','Yêu cầu mới cùng chủ đề','Ngọc Linh cần góp ý CV Data Intern và có thể trao đổi speaking.', '/yeu-cau',now()-interval '3 hours',now()-interval '4 hours'),
+  ('80000000-0000-4000-8000-000000000024','10000000-0000-4000-8000-000000000010','request_new','Có yêu cầu Excel mới','Một thành viên đang tìm người hỗ trợ Pivot Table và báo cáo CLB.', '/yeu-cau',now()-interval '6 hours',now()-interval '7 hours')
+  on conflict(id) do nothing`)
+
   await client.query('commit')
   console.log('Đã seed dữ liệu mô phỏng TLUCS.')
 }catch(error){await client.query('rollback');throw error}finally{client.release();await db.end()}

@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { embedText,embeddingEnabled } from './embeddingService.js'
 import { database } from "../db/connection.js";
 import {
   requestPolicy,
@@ -123,8 +124,11 @@ export async function listRequests(filters = {}) {
       (x) =>
         x.status === "open" &&
         (!filters.kind || x.kind === filters.kind) &&
+        (!filters.universityId || x.university_id === filters.universityId) &&
+        (!filters.budget || filters.budget === 'free' && !x.amount_vnd || filters.budget === 'under50' && x.amount_vnd > 0 && x.amount_vnd <= 50000 || filters.budget === '50to100' && x.amount_vnd > 50000 && x.amount_vnd <= 100000 || filters.budget === 'over100' && x.amount_vnd > 100000) &&
+        (!filters.timeRange || new Date(x.starts_at) <= new Date(Date.now()+({ '24h':24,'3d':72,'7d':168 }[filters.timeRange]||Infinity)*3600000)) &&
         (!filters.q ||
-          (x.title + x.description + x.course_name)
+          (x.title + x.description + x.course_name + x.university_code + x.university_name)
             .toLowerCase()
             .includes(filters.q.toLowerCase())),
     );
@@ -139,10 +143,19 @@ export async function listRequests(filters = {}) {
     values.push(filters.universityId);
     where.push(`r.university_id=$${values.length}`);
   }
+  if (filters.timeRange && ['24h','3d','7d'].includes(filters.timeRange)) {
+    const hours = { '24h': 24, '3d': 72, '7d': 168 }[filters.timeRange];
+    values.push(hours);
+    where.push(`r.starts_at between now() and now()+($${values.length}||' hours')::interval`);
+  }
+  if (filters.budget === 'free') where.push(`coalesce(r.amount_vnd,0)=0`);
+  if (filters.budget === 'under50') where.push(`r.amount_vnd between 1 and 50000`);
+  if (filters.budget === '50to100') where.push(`r.amount_vnd between 50001 and 100000`);
+  if (filters.budget === 'over100') where.push(`r.amount_vnd>100000`);
   if (filters.q) {
     values.push(`%${filters.q}%`);
     where.push(
-      `(r.title ILIKE $${values.length} OR r.description ILIKE $${values.length} OR r.course_name ILIKE $${values.length} OR c.name ILIKE $${values.length})`,
+      `(r.title ILIKE $${values.length} OR r.description ILIKE $${values.length} OR r.course_name ILIKE $${values.length} OR c.name ILIKE $${values.length} OR u.code ILIKE $${values.length} OR u.name ILIKE $${values.length})`,
     );
   }
   const { rows } = await db.query(
@@ -150,6 +163,24 @@ export async function listRequests(filters = {}) {
     values,
   );
   return rows;
+}
+
+const cosine=(a,b)=>a&&b?a.reduce((sum,value,index)=>sum+value*b[index],0):0
+export async function recommendRequests(userId){
+  const db=database();if(!db)return (await listRequests()).map((item,index)=>({...item,match_score:Math.max(55,90-index*8),match_reasons:['Phù hợp chủ đề bạn quan tâm'],ai_semantic:false}))
+  const [userResult,topicsResult,slotsResult,membershipsResult,reputationResult,candidates]=await Promise.all([
+    db.query('select id,account_kind,default_university_id from users where id=$1 and status=\'active\'',[userId]),
+    db.query('select t.name,t.slug,t.category from user_topics ut join topics t on t.id=ut.topic_id where ut.user_id=$1',[userId]),
+    db.query('select weekday,start_time,end_time from user_availability where user_id=$1',[userId]),
+    db.query('select university_id,verification_status from university_memberships where user_id=$1',[userId]),
+    db.query('select completed_requests,average_rating,punctuality_rate from user_reputation_stats where user_id=$1',[userId]),
+    listRequests(),
+  ]);const user=userResult.rows[0];if(!user)throw Object.assign(new Error('Không tìm thấy hồ sơ đang hoạt động.'),{status:404});const topics=topicsResult.rows,slots=slotsResult.rows,memberships=membershipsResult.rows,reputation=reputationResult.rows[0]||{};
+  const profileText=`Vai trò ${user.account_kind}. Chủ đề có thể quan tâm và hỗ trợ: ${topics.map(x=>`${x.name}, ${x.slug}, ${x.category}`).join('; ')}.`;let profileVector=null,vectors=[];
+  if(embeddingEnabled())try{profileVector=await embedText(profileText);vectors=await Promise.all(candidates.filter(x=>x.author_id!==userId).map(x=>embedText(`${x.course_name||''}. ${x.title}. ${x.description}`,'RETRIEVAL_DOCUMENT')))}catch{profileVector=null;vectors=[]}
+  const tokens=topics.flatMap(x=>[x.name,x.slug,x.category]).join(' ').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(x=>x.length>=3),verified=new Set(memberships.filter(x=>x.verification_status==='approved').map(x=>x.university_id));
+  return candidates.filter(x=>x.author_id!==userId).map((item,index)=>{let score=0;const reasons=[],text=`${item.title} ${item.description} ${item.course_name||''}`.toLowerCase();const sameSchool=memberships.some(x=>x.university_id===item.university_id);if(sameSchool){score+=20;reasons.push(`Cùng ${item.university_code||'trường của bạn'}`)}const matchedTokens=[...new Set(tokens.filter(token=>text.includes(token)))];if(profileVector){const semantic=Math.max(0,cosine(profileVector,vectors[index]));score+=semantic*45;if(semantic>=.55)reasons.push('Nội dung gần với chủ đề trong hồ sơ')}else if(matchedTokens.length){score+=Math.min(35,12+matchedTokens.length*7);reasons.push('Khớp chủ đề bạn quan tâm')}
+    const start=new Date(item.starts_at),weekday=start.getDay(),minutes=start.getHours()*60+start.getMinutes(),available=slots.some(slot=>Number(slot.weekday)===weekday&&minutes>=Number(String(slot.start_time).slice(0,2))*60+Number(String(slot.start_time).slice(3,5))&&minutes<=Number(String(slot.end_time).slice(0,2))*60+Number(String(slot.end_time).slice(3,5)));if(available){score+=20;reasons.push('Nằm trong khung giờ bạn rảnh')}if(item.require_verified_university&&verified.has(item.university_id)){score+=10;reasons.push('Đã xác minh đúng trường')}else if(item.require_verified_university)score-=15;const reliability=Math.min(5,Number(reputation.completed_requests||0)/4+Math.max(0,Number(reputation.average_rating||0)-4)*2);score+=reliability;return {...item,match_score:Math.max(0,Math.min(100,Math.round(score))),match_reasons:reasons.slice(0,3),ai_semantic:Boolean(profileVector)}}).filter(x=>x.match_score>=20).sort((a,b)=>b.match_score-a.match_score||new Date(a.starts_at)-new Date(b.starts_at))
 }
 
 export async function createRequest(userId, input) {

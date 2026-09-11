@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+/* oxlint-disable react-hooks/exhaustive-deps */
 import { CheckCircle2, Clock3, MessageSquare, Star, UserCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
