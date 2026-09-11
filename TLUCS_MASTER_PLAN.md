@@ -247,41 +247,46 @@ Ngưỡng mở rộng pilot: tỷ lệ ghép ≥60%, hoàn tất trên số đã
 
 ## 10. Trạng thái triển khai hiện tại
 
-Cập nhật ngày 27/08/2026 trên nhánh `main`, mốc mã nguồn `fd12a98`.
+Cập nhật ngày 11/09/2026 trên nhánh `main`, mốc mã nguồn `b1129d8`.
 
 ### Đã triển khai
 
 - Web React/Vite và API Express độc lập theo namespace `/api/v1`; môi trường local chạy đồng thời bằng `npm run dev:all` tại cổng 5173 và 4000.
 - Google OAuth, access/refresh session, ghi nhớ tài khoản Google đã dùng và tự khôi phục phiên. Người dùng vẫn có thể đăng xuất để đổi tài khoản.
-- Điều hướng, dashboard, chọn trường, tìm kiếm toàn cục, Bảng yêu cầu, Bảng chia sẻ, Diễn đàn, server trường, tin nhắn, phiên hỗ trợ, thông báo, ví, hồ sơ và trang quản trị cơ bản.
+- Điều hướng, dashboard, chọn trường, tìm kiếm toàn cục, Bảng yêu cầu, Bảng chia sẻ, Diễn đàn, server trường, tin nhắn, phiên hỗ trợ, thông báo, ví, hồ sơ và trang quản trị.
 - Ba loại yêu cầu miễn phí, trả phí và trao đổi; nội dung môn học/chủ đề được giữ đúng khi hiển thị trên bảng tin; tiền VND được định dạng theo nhóm nghìn.
 - Thẻ nội dung trên các bảng có thể mở lớp chi tiết để đọc toàn bộ bài và thực hiện hành động liên quan.
-- Bảng chia sẻ hỗ trợ bài miễn phí và trả phí, tham gia, xác nhận, hủy, tranh chấp, đánh giá và tài liệu đính kèm cơ bản.
+- Bảng chia sẻ hỗ trợ bài miễn phí và trả phí, tham gia, xác nhận, hủy, tranh chấp, đánh giá và tài liệu đính kèm (kiểm tra MIME + chữ ký byte đầu).
 - Chat riêng, chat server, lời mời trò chuyện, chặn người dùng và WebSocket cho tin nhắn thời gian thực.
-- Ví mô phỏng có liên kết ngân hàng, nạp bằng mệnh giá hoặc số tiền tự nhập, QR mô phỏng, rút tiền, thanh toán, giữ tiền và giải ngân.
+- Ví mô phỏng có liên kết ngân hàng, nạp bằng mệnh giá hoặc số tiền tự nhập, QR mô phỏng, rút tiền, thanh toán, giữ tiền và giải ngân; thêm chế độ `manual_review` (chuyển khoản thủ công, số tài khoản mã hóa AES-256-GCM) cho bước chuyển tiếp trước khi có cổng thanh toán thật.
 - Phiên hỗ trợ có lịch hẹn, điểm danh, hoàn tất, báo vắng mặt, đánh giá và tranh chấp.
-- Trợ lý AI nổi ở góc màn hình dùng Gemini, trả lời hướng dẫn và khiếu nại. Chế độ AI Agent hiện có thể thu thập dữ liệu còn thiếu, yêu cầu xác nhận rồi tạo yêu cầu hoặc sửa thông tin hồ sơ cơ bản thay người dùng.
-- Gemini dùng biến `GEMINI_API_KEY` và model `gemini-3.6-flash`. Cấu hình local, giá trị mặc định trong API và Render Blueprint đã được đồng bộ.
+- **Kho tri thức học thuật mở + RAG ngữ nghĩa:** kho `knowledge/*.md` (gồm 5 tài liệu HCMUS: tổng quan, tuyển sinh/học phí 2026, nhập học, đăng ký học phần/học vụ, KTX/thư viện/hỗ trợ) được chunk theo heading, sinh embedding thật bằng `gemini-embedding-001` (768 chiều, chuẩn hóa), lưu trong Neon qua pgvector + HNSW cosine index. Truy vấn kết hợp keyword và cosine similarity bằng RRF, tự rơi về keyword khi Gemini/DB lỗi.
+- Trợ lý AI nổi ở góc màn hình dùng Groq (chính) và Gemini (dự phòng), có bộ định tuyến ý định (`static/rag/agent_read/agent_write/confirm/clarify`). Chế độ AI Agent có ~35 tool đọc/ghi (yêu cầu, bài chia sẻ, ví, phiên, diễn đàn, cộng đồng, tin nhắn, xác minh, báo cáo…); mọi tool ghi đều tạo hành động chờ xác nhận (`pendingAssistantActionService`) trước khi thực thi. Chatbox tự cuộn xuống tin mới nhất khi mở và tự reset lịch sử theo ngày.
+- Thông báo trong-app, **email thật qua Resend** và **web push thật (VAPID ký ES256)** khi người dùng có subscription.
+- Trang quản trị: dashboard, quản lý người dùng/nội dung (ẩn/khôi phục có lý do), danh sách giao dịch, duyệt yêu cầu nạp/rút thủ công, **giải quyết tranh chấp (hoàn tiền/giải ngân/chia đôi/bác đơn) có transaction + audit log + thông báo hai bên**, và nhật ký audit tra cứu được.
 - Seed demo có 15 tài khoản, mỗi tài khoản có 100.000đ trong ví, nhiều yêu cầu/bài chia sẻ/bài diễn đàn và nội dung hội thoại ở phòng riêng, server và trường khác nhau để trình diễn sản phẩm.
-- Migration đã bổ sung trạng thái giao dịch `cancelled`, phục vụ job tự hủy thanh toán yêu cầu quá hạn.
-- Render Blueprint triển khai web tĩnh và Node API; API dùng Neon PostgreSQL và Cloudinary theo biến môi trường.
-- README đã được viết lại theo hướng giới thiệu sản phẩm trước, sau đó mới đến liên kết truy cập và nguyên tắc cộng đồng.
+- Render Blueprint triển khai web tĩnh và Node API; API dùng Neon PostgreSQL (bật pgvector) và Cloudinary theo biến môi trường.
+- README, Project Brief, Master Plan, Roadmap đồng bộ định vị: TLUCS là kho tri thức học thuật mở của cộng đồng, lớp kết nối "đúng người" là cơ chế bổ trợ. Có thêm `TLUCS_VISION.md`/`.pdf` mô tả chi tiết và bộ slide/standee bản trực quan.
 
-### Đang ở mức mô phỏng hoặc giới hạn
+### Đang ở mức mô phỏng, giới hạn hoặc còn lỗi cần sửa
 
-- Nạp, rút, liên kết ngân hàng, QR và toàn bộ luồng thanh toán chưa phát sinh tiền thật.
+- **Chất lượng truy hồi RAG chưa ổn định:** một số câu hỏi tự nhiên (ví dụ hỏi thư viện, hỏi số ngành đào tạo) vẫn nhận **kết quả sai với độ tin cậy cao** vì nhóm mở rộng từ khóa trong `query-expansions.json` gộp quá rộng và `answerFromKnowledge` luôn báo `matched:true` cho kết quả đứng đầu bất kể có thực sự khớp hay không. Cần tách nhỏ/giảm trọng số nhóm mở rộng, khôi phục ngưỡng lọc trước khi xếp hạng RRF, và cho phép trả lời "chưa biết" khi kết quả #1 yếu.
+- Nạp, rút, liên kết ngân hàng, QR và luồng thanh toán mô phỏng chưa phát sinh tiền thật; chế độ `manual_review` mới là bước trung gian (đối soát thủ công), chưa phải cổng thanh toán tự động, chưa KYC.
 - Nút gọi chỉ mô phỏng giao diện; chưa có thoại hoặc video thời gian thực.
-- AI Agent mới thực thi hai nhóm hành động là tạo yêu cầu và sửa tên hiển thị/khu vực. Các thao tác ví, bài chia sẻ, chat, lịch, khiếu nại và quản trị chưa được phép tự động thực thi.
+- Chat riêng có schema cho ảnh/tệp/ghi âm (`attachment_url`) nhưng **chưa có endpoint tải tệp lên** cho tin nhắn; WebSocket mới phát tin nhắn, chưa có typing indicator hay trạng thái online (presence).
+- Upload tài liệu chia sẻ mới kiểm tra MIME/chữ ký byte đầu; `scan_status` gán cứng `'safe'`, **chưa có engine quét virus thật và chưa cách ly tệp nghi ngờ**.
+- **Chưa có lớp an toàn cho người dùng dưới 18 tuổi**: tài khoản `high_school_student` được phép dùng yêu cầu miễn phí/trả phí/trao đổi như người lớn, không có xác minh tuổi hay đồng ý phụ huynh.
 - Dữ liệu 15 người dùng và hội thoại là dữ liệu seed phục vụ demo, không đại diện cho hoạt động người dùng thật.
-- Upload đã có luồng tệp cơ bản nhưng chưa hoàn tất toàn bộ pipeline cách ly, quét virus, kiểm duyệt nội dung và chính sách bản quyền production-grade.
-- Moderation, verification, report và admin queue đã có nền tảng cơ bản; audit, phân quyền chi tiết và quy trình kháng nghị vẫn cần hoàn thiện trước pilot thật.
+- Moderation, verification, report có nền tảng cơ bản; phân quyền chi tiết và quy trình kháng nghị vẫn cần hoàn thiện trước pilot thật.
+- Chưa tách database development/test/production; test hiện chạy với `DATABASE_URL` rỗng (rơi về dữ liệu trong bộ nhớ) thay vì một nhánh Neon test riêng.
+- Test tự động mới ở cấp service (Node `--test`, 69 test); chưa có test end-to-end cấp trình duyệt (Playwright/Cypress) cho các luồng chính.
 
 ### Ưu tiên tiếp theo
 
-1. Hoàn thiện test end-to-end cho luồng đăng nhập, đăng yêu cầu, ghép, chat, thanh toán mô phỏng, hoàn tất và đánh giá.
-2. Mở rộng AI Agent bằng danh sách hành động cho phép rõ ràng, xác nhận bắt buộc, kiểm tra quyền và audit log cho từng lần thực thi.
-3. Hoàn thiện attachment chat, trạng thái đọc, typing, presence và khả năng phục hồi WebSocket.
-4. Bổ sung pagination thống nhất, trạng thái loading/rỗng/lỗi và kiểm tra responsive cho mọi màn hình danh sách.
-5. Hoàn thiện moderation, verification, dispute, notification email/web push và analytics cho pilot HCMUS.
+1. Sửa chất lượng truy hồi RAG (tách nhóm mở rộng từ khóa, khôi phục ngưỡng lọc trước RRF, `matched` phản ánh đúng độ tin cậy thật).
+2. Thêm endpoint tải ảnh/tệp/ghi âm cho chat riêng; bổ sung typing indicator, presence và khả năng phục hồi kết nối WebSocket.
+3. Thiết kế lớp an toàn cho người dùng dưới 18 tuổi trước khi mời người dùng thật ngoài nhóm thí điểm nội bộ.
+4. Thay `scan_status:'safe'` cố định bằng quét virus/nội dung thật và cơ chế cách ly tệp nghi ngờ.
+5. Viết test end-to-end cấp trình duyệt cho các luồng chính (miễn phí/trả phí/trao đổi, Bảng chia sẻ, tranh chấp).
 6. Tách database development, test và production; bổ sung quy trình migration có kiểm thử và rollback an toàn.
 7. Thực hiện kiểm thử bảo mật, tải, quyền riêng tư, backup và disaster recovery trước khi mời người dùng thật.

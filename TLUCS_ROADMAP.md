@@ -1,6 +1,6 @@
 # TLUCS: Roadmap và sơ đồ phát triển chi tiết
 
-> Cập nhật: 27/08/2026  
+> Cập nhật: 11/09/2026  
 > Sản phẩm: **TLUCS: Trusted Local University Community Space**  
 > Thị trường khởi động: **HCMUS**  
 > Tầm nhìn: một không gian cộng đồng đa trường cho toàn bộ đời sống đại học.
@@ -150,12 +150,16 @@ TLUCS
 | Onboarding và hồ sơ đa trường | MVP đã có | Xác minh thật vẫn cần quy trình vận hành |
 | Bảng yêu cầu ba chế độ | MVP đã có | Matching, hàng đợi, lịch, địa điểm gần đúng |
 | Ví/escrow mô phỏng | MVP đã có | Có delay 3 giây, ledger và phí 1% |
-| Chat riêng sau ghép | MVP đã có | Text hoạt động; media cần hoàn thiện production |
+| Chat riêng sau ghép | MVP đã có | Text + WebSocket thời gian thực hoạt động; chưa có endpoint tải ảnh/tệp/ghi âm, chưa có typing/presence |
 | Diễn đàn và server trường | MVP đã có | Cần tăng độ sâu UI và moderation thật |
-| Bảng chia sẻ | MVP đã có | Hai định dạng, giữ tiền và tranh chấp cơ bản |
+| Bảng chia sẻ | MVP đã có | Hai định dạng, giữ tiền, tranh chấp và tài liệu đính kèm (kiểm MIME/chữ ký, chưa quét virus thật) |
+| Kho tri thức + RAG ngữ nghĩa | MVP đã có, cần sửa chất lượng | Embedding Gemini + pgvector HNSW + RRF; đang trả nhầm kết quả tự tin sai cho một số câu hỏi tự nhiên |
+| Quản trị & tranh chấp | Đã có | Dashboard, kiểm duyệt nội dung, giải quyết tranh chấp (hoàn tiền/giải ngân/chia đôi) có audit log |
+| Thông báo | Đã có | Email thật qua Resend, web push thật (VAPID), thông báo trong-app |
 | Dữ liệu mô phỏng | Đã có | Seed idempotent, có nhãn Mô phỏng |
-| Test nghiệp vụ | Đã có | 36 test đạt ở thời điểm cập nhật |
-| Thanh toán thật | Chưa làm | Sau pilot và đánh giá pháp lý/KYC |
+| Test nghiệp vụ | Đã có | 69 test đạt ở thời điểm cập nhật; chưa có test E2E cấp trình duyệt |
+| An toàn người dùng dưới 18 tuổi | Chưa làm | Tài khoản THPT chưa có xác minh tuổi/đồng ý phụ huynh |
+| Thanh toán thật | Chưa làm | Có thêm chế độ `manual_review` (đối soát thủ công) làm bước trung gian; cổng thanh toán tự động và KYC vẫn sau pilot |
 | Mobile app | Chưa làm | API đã định hướng dùng chung |
 
 ## 3. Roadmap theo giai đoạn
@@ -179,7 +183,7 @@ TLUCS
 
 **Mục tiêu:** mọi lời hứa chính trong giao diện có hành vi backend tương ứng.
 
-- [ ] Admin giải quyết tranh chấp: hoàn tiền, giải ngân, chia tiền, lưu lý do.
+- [x] Admin giải quyết tranh chấp: hoàn tiền, giải ngân, chia tiền, lưu lý do.
 - [ ] Trả cọc chủ Bảng chia sẻ khi buổi thành công.
 - [ ] Snapshot lời chào bán tại thời điểm mua.
 - [ ] Khóa 7 ngày/30 ngày đúng luật tái phạm 90 ngày.
@@ -303,6 +307,7 @@ TLUCS
 - Xác minh bảng điểm/thẻ sinh viên chứa dữ liệu nhạy cảm.
 - Người chưa thành niên tham gia phiên trực tuyến cần lớp bảo vệ và kiểm duyệt phù hợp.
 - Free-tier infrastructure không phù hợp khi có tải thật.
+- RAG có thể trả lời sai với độ tin cậy hiển thị cao (đã ghi nhận ở kho HCMUS) nếu nhóm mở rộng từ khóa quá rộng; cần sửa trước khi cho người dùng thật tin vào câu trả lời.
 
 ## 7. Việc ưu tiên ngay sau bản demo
 
