@@ -46,3 +46,15 @@ notes/
 docs/
 ctp2026/
 Yêu cầu/
+
+# Tài liệu chiến lược / thuyết trình / khảo sát — không phải code, không đưa vào git
+# (README.md và knowledge/*.md vẫn giữ vì gắn trực tiếp với sản phẩm/RAG)
+TLUCS_MASTER_PLAN.md
+TLUCS_PROJECT_BRIEF.md
+TLUCS_ROADMAP.md
+TLUCS_VISION.md
+TLUCS_VISION.pdf
+TLUCS_Khao_Sat_Kiem_Chung.pdf
+TLUCS_Slide*.pptx
+TLUCS_Slide*.pdf
+TLUCS_Standee*.pptx
