@@ -4,6 +4,7 @@
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; }
 body { margin:0; min-width:320px; background:#fbfcff; color:#14213d; -webkit-font-smoothing:antialiased; }
+.whitespace-pre-line { overflow-wrap:anywhere; word-break:break-word; }
 button,input,select,textarea { font:inherit; }
 button,a { -webkit-tap-highlight-color:transparent; }
 a { text-decoration:none; }
