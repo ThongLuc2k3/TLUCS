@@ -24,7 +24,7 @@ export function shouldUseAgent(message) {
   return personalData || isMarketplaceLookup(message) || (!staticQuestion && operation && requestCue)
 }
 
-export function isMarketplaceLookup(message){const text=normalizeIntent(message),entity=/(template|cv|checklist|slide|tai lieu|bai chia se|bo de|lo trinh|buoi chia se|noi dung chia se|yeu cau ho tro)/.test(text),lookup=/(toi can|minh can|can tim|muon tim|tim|kiem|co .* khong|mo khoa|xem|goi y)/.test(text);return entity&&lookup}
+export function isMarketplaceLookup(message){const text=normalizeIntent(message),entity=/(template|cv|checklist|slide|tai lieu|bai chia se|bo de|lo trinh|buoi chia se|noi dung chia se|yeu cau ho tro|bang yeu cau|danh sach yeu cau|cac yeu cau|yeu cau ve|yeu cau mon|co yeu cau)/.test(text),lookup=/(toi can|minh can|can tim|muon tim|tim|kiem|co .* khong|mo khoa|xem|goi y|danh sach|^bang |^cac )/.test(text);return entity&&lookup}
 
 router.post('/chat', aiLimiter, async (req, res, next) => {
   try {
