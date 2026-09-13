@@ -34,6 +34,7 @@ try {
   await client.query(`alter table users drop constraint if exists users_role_check`)
   await client.query(`alter table users add constraint users_role_check check(role in ('member','moderator','admin','super_admin'))`)
   await client.query(`create table if not exists admin_credentials(user_id uuid primary key references users(id) on delete cascade,password_hash text not null,password_changed_at timestamptz not null default now())`)
+  await client.query(`create table if not exists password_credentials(user_id uuid primary key references users(id) on delete cascade,password_hash text not null,password_changed_at timestamptz not null default now())`)
   await client.query(`create table if not exists admin_audit_logs(id uuid primary key default gen_random_uuid(),actor_id uuid not null references users(id),action text not null,target_type text not null,target_id text,reason text not null,metadata jsonb not null default '{}',created_at timestamptz not null default now())`)
   await client.query(`create index if not exists admin_audit_created_idx on admin_audit_logs(created_at desc)`)
   await client.query(`update requests set delivery_mode='online',area_label=null,latitude_blurred=null,longitude_blurred=null where delivery_mode<>'online' or area_label is not null or latitude_blurred is not null or longitude_blurred is not null`)
